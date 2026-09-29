@@ -387,3 +387,29 @@ Il comando viene rappresentato come un array, dove ogni elemento corrisponde a u
 
 
 # Capitolo 2 - Dockerfile multi-stage
+
+### Preambolo: perché il multi-stage build
+
+Da dove partiamo
+Oggi la tua build ha due fasi separate. La prima la fai tu sul computer: ./mvnw package genera il jar in target/. La seconda la fa Docker: il Dockerfile copia quel jar in un'immagine con Java 21 e lo avvia.
+
+#### Il problema
+Questo schema funziona sul tuo computer, ma ha tre limiti:
+
+Dipende dal tuo ambiente. L'immagine è corretta solo se prima hai eseguito Maven a mano. Chi clona il repository e lancia subito docker build ottiene un errore.
+Non è adatto alla CI. Una pipeline parte da un repository pulito, dove target/ non esiste. Dovresti far compilare il jar a un passaggio della pipeline, prima di Docker, e passarlo in qualche modo all'immagine: possibile, ma più fragile e con più pezzi da tenere insieme.
+L'immagine è più grande del necessario. Per eseguire un jar basta un JRE, mentre hai usato un JDK completo, che contiene anche compilatore e strumenti di sviluppo. In produzione sono peso inutile e superficie d'attacco in più.
+
+#### L'idea del multi-stage build
+Un solo Dockerfile con più fasi, dette stage:
+
+lo stage di build contiene tutto il necessario per compilare (JDK, Maven, sorgenti) e produce il jar;
+lo stage finale parte da un'immagine leggera e riceve solo il risultato, cioè il jar.
+
+Tutto ciò che sta negli stage intermedi non finisce nell'immagine finale. È come costruire in un cantiere e consegnare solo l'edificio, senza gru e attrezzi.
+
+#### Cosa ottieni
+
+Una build riproducibile: bastano git clone e docker build, su qualunque macchina.
+Un'immagine più piccola e più sicura.
+Un Dockerfile che la pipeline può usare così com'è, senza passaggi manuali.
