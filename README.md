@@ -2,6 +2,9 @@
 
 Piccola API Spring Boot usata per esercitarmi con Git, Linux e Docker.
 
+> [!NOTE]
+> Se vuoi approfondire gli aspetti teorici trattati nel progetto, consulta il file `notes.md` presente nel repository.
+
 ## Obiettivo
 
 Costruire una pipeline completa su GitHub Actions che effettui il deploy automatico dell'applicazione a ogni merge sul branch `main`.
