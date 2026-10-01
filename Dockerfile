@@ -10,7 +10,7 @@ RUN ./mvnw package -DskipTests
 
 # RUN
 FROM eclipse-temurin:21-jre-noble AS run
-EXPOSE 80
+EXPOSE 8080
 WORKDIR /opt/app/
 RUN groupadd -r app && useradd --no-log-init -r -g app app
 COPY --from=build --chown=app:app /opt/app/target/*.jar app.jar
