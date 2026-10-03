@@ -1,5 +1,18 @@
-FROM eclipse-temurin:21
+# BUILD
+FROM eclipse-temurin:21-jdk-noble AS build
 WORKDIR /opt/app/
-COPY target/devops-lab-0.0.1-SNAPSHOT.jar .
+COPY .mvn/ .mvn
+COPY mvnw pom.xml .
+RUN chmod +x mvnw && ./mvnw dependency:go-offline
+COPY src ./src
+RUN ./mvnw package -DskipTests
+
+
+# RUN
+FROM eclipse-temurin:21-jre-noble AS run
 EXPOSE 8080
-CMD ["java", "-jar", "./devops-lab-0.0.1-SNAPSHOT.jar"] 
+WORKDIR /opt/app/
+RUN groupadd -r app && useradd --no-log-init -r -g app app
+COPY --from=build --chown=app:app /opt/app/target/*.jar app.jar
+USER app
+CMD ["java", "-jar", "./app.jar"] 
