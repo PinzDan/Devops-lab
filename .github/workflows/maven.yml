@@ -27,8 +27,30 @@ jobs:
         java-version: '21'
         distribution: 'temurin'
         cache: maven
+        
     - name: Test with Maven
       run: ./mvnw -B test --file pom.xml
 
     - name: Docker Build
       run: docker build -t devops-lab:${{github.sha}} .
+
+    - name: Docker run
+      run: docker run -d -p 8080:8080 devops-lab:${{github.sha}}
+
+    - name: Wait Application Response
+      run: |
+        for i in {1..30}; do
+          if curl -fs http://localhost:8080/actuator/health > /dev/null; then
+            echo "HealthCheck completed."
+            exit 0
+          else
+            echo "Waiting for a reply ($i/30)..."
+            sleep 2
+          fi
+        done
+        echo "L'applicazione non si è avviata entro i tempi previsti."
+        exit 1
+
+    - name: Cleanup Docker Container
+      if: always() # Viene eseguito anche se uno step precedente fallisce
+      run: docker stop $(docker ps -q --filter ancestor=devops-lab:${{ github.sha }})
